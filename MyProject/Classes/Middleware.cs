@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 
+namespace MyProject;
 public static class UmbracoMemberBuilderExtensions
 {
     public static IUmbracoBuilder AddUserCookieAuthentication(this IUmbracoBuilder builder, string cookieName)

@@ -33,6 +33,7 @@ namespace MyProject
                 .AddBackOffice()
                 .AddWebsite()
                 .AddComposers()
+                .AddUserCookieAuthentication("MyCookeName")
                 .Build();
         }
 
@@ -53,6 +54,10 @@ namespace MyProject
                 {
                     u.UseBackOffice();
                     u.UseWebsite();
+
+                    
+                    u.AppBuilder.UseAuthentication();
+                    u.AppBuilder.UseAuthorization();
                 })
                 .WithEndpoints(u =>
                 {

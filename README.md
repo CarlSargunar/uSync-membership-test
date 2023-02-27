@@ -15,13 +15,15 @@ Sample project to test the issue with membership. Set up using the following ste
     # Run the site
     dotnet run --project "MyProject"
 
-Log in to Umbraco and ensure uSync is running
+Log in to Umbraco and ensure uSync is running. You should see something like :
+
+![uSync](media/1.png)
 
 
     
 ## Steps to replicate
 
-Add the Cookie auth middleware in a new class
+Add the Cookie auth middleware in a new class. This is based on a comment from the [following forum post](https://our.umbraco.com/forum/using-umbraco-and-getting-started/109692-cookieauthentication-not-working-in-website#comment-341398).
 
     public static class UmbracoMemberBuilderExtensions
     {
@@ -52,7 +54,58 @@ Add the Cookie auth middleware in a new class
         }
     }
 
-Modify the startup.cs to add Cookie authentication
+Modify the startup.cs to add Cookie authentication to the build pipeline.
 
+    /// <summary>
+    /// Configures the services.
+    /// </summary>
+    /// <param name="services">The services.</param>
+    /// <remarks>
+    /// This method gets called by the runtime. Use this method to add services to the container.
+    /// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940.
+    /// </remarks>
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddUmbraco(_env, _config)
+            .AddBackOffice()
+            .AddWebsite()
+            .AddComposers()
+            .AddUserCookieAuthentication("MyCookeName")
+            .Build();
+    }
 
+    /// <summary>
+    /// Configures the application.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="env">The web hosting environment.</param>
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
 
+        app.UseUmbraco()
+            .WithMiddleware(u =>
+            {
+                u.UseBackOffice();
+                u.UseWebsite();
+
+                
+                u.AppBuilder.UseAuthentication();
+                u.AppBuilder.UseAuthorization();
+            })
+            .WithEndpoints(u =>
+            {
+                u.UseInstallerEndpoints();
+                u.UseBackOfficeEndpoints();
+                u.UseWebsiteEndpoints();
+            });
+    }
+
+Run the site and log in to the back office. You should see the following error:
+
+Note : I've not included the implementation of the actual cookie auth, which DOES work as expected. I can if it will help, but in our case we use it to build membership from a different user store.
+
+![Error](media/2.png)
